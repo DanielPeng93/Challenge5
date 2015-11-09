@@ -1,4 +1,4 @@
-var vehicleLocation = [5 ,14];
+var vehicleLocation = [4 ,18];
 var hallwayLocation = [0, 18, 28, 46]
 var floorMap = [];
 var row;
