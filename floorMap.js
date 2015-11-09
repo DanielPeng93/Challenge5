@@ -1,32 +1,33 @@
-var vehicleLocation = [4 ,18];
-var hallwayLocation = [0, 18, 28, 46]
-var floorMap = [];
-var row;
-var str;
-var num;
+vehicleLocation = [0,42];
+console.log('\n');
+asciiLocationMap(vehicleLocation);
+console.log('\n');
 
-for (var i = 0; i < 47; i++){
-	floorMap.push('|    |');
-}
-floorMap[hallwayLocation[0]] = '|----|';
-floorMap[hallwayLocation[1]] = '|----|';
-floorMap[hallwayLocation[2]] = '|----|';
-floorMap[hallwayLocation[3]] = '|----|';
-floorMap[48] = '012345'
+function asciiLocationMap(vehicleLocation) {
+	hallwayLocation = [0, 18, 28, 46]
+	floorMap = [];
 
-var count = -1;
-floorMap.map(function (item){
-	count++ 
-	for (var i = 0, len = item.length, str = '', row = ''; i < len; i++){
-		row = 46;
-		str = str + item[i] + ' ';
-	};
-	mapDisplay(row, count, str);
-	
-});
+	for (var i = 0; i < 47; i++){
+		floorMap.push('|    |');
+	}
+	floorMap[hallwayLocation[0]] = '|----|';
+	floorMap[hallwayLocation[1]] = '|----|';
+	floorMap[hallwayLocation[2]] = '|----|';
+	floorMap[hallwayLocation[3]] = '|----|';
+	floorMap[48] = '012345'
 
-function mapDisplay(row, count, str) {
-		num = row - count;
+	var count = -1;
+	floorMap.map(function (item){
+		count++ 
+		for (var i = 0, len = item.length, str = '', row = 46; i < len; i++){
+			str = str + item[i] + ' ';
+		};
+		mapDisplay(row, count, str);
+
+	});
+
+	function mapDisplay(row, count, str) {
+		var num = row - count;
 		var numStr;
 		numStr = num.toString();
 		if (num < 10) numStr = num.toString() + ' ';
@@ -39,11 +40,12 @@ function mapDisplay(row, count, str) {
 		};
 	};
 
-function atRow(hallwayLocation, num) {
-	for (var i = 0; i < hallwayLocation.length; i++){
-		if (hallwayLocation[i] === num || vehicleLocation[0] === 0 || vehicleLocation[0] === 5) {
-			return true;
-			break;
-		} 
-	} return false;
+	function atRow(hallwayLocation, num) {
+		for (var i = 0; i < hallwayLocation.length; i++){
+			if (hallwayLocation[i] === num || vehicleLocation[0] === 0 || vehicleLocation[0] === 5) {
+				return true;
+				break;
+			} 
+		} return false;
+	}
 }
