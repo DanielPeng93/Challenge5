@@ -1,4 +1,4 @@
-var vehicleLocation = [3 ,18];
+var vehicleLocation = [5 ,14];
 var hallwayLocation = [0, 18, 28, 46]
 var floorMap = [];
 var row;
@@ -41,7 +41,7 @@ function mapDisplay(row, count, str) {
 
 function atRow(hallwayLocation, num) {
 	for (var i = 0; i < hallwayLocation.length; i++){
-		if (hallwayLocation[i] === num) {
+		if (hallwayLocation[i] === num || vehicleLocation[0] === 0 || vehicleLocation[0] === 5) {
 			return true;
 			break;
 		} 
