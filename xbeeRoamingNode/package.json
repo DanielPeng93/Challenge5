@@ -1,0 +1,24 @@
+{
+  "name": "xbeeRoamingNode",
+  "version": "0.0.1",
+  "description": "Javascript program communicating to a ZigBee network through a Zigbee explorer module via serial for indoor positioning through Zigbee RSSI",
+  "main": "._xbeeRoamingNode.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EC544-2015-Group2/Challenge5.git"
+  },
+  "author": "ghirlekar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EC544-2015-Group2/Challenge5/issues"
+  },
+  "homepage": "https://github.com/EC544-2015-Group2/Challenge5#readme",
+  "dependencies": {
+    "keypress": "^0.2.1",
+    "serialport": "*",
+    "xbee-api": "*"
+  }
+}
