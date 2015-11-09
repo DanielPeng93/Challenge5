@@ -26,11 +26,38 @@
 
 // Loads required NPM modules and makes them available in scope
 var xbee_api = require('xbee-api'),
-    serialPort = require('serialport');
+    serialPort = require('serialport'),
+    ml = require('machine_learning'),
+    fs = require('fs');
 
 // IMPORTANT: Use api_mode: 2 as the xbee-arduino library requires it
 // Create the xbeeAPI object which handles parsing and generating of API frames
 // C contains some Xbee constant bytes such as frame type, transmit/receive options, etc.
+
+var data = fs.readFileSync('data.csv', 'utf8').split('\r\n').map(function(item) {
+    return item.split(',');
+});
+var result = [];
+for (var i = 0; i < 110; i++)
+    for (var j = 0; j < 5; j++)
+        result.push(i);
+
+var knn = new ml.KNN({
+    data: data,
+    result: result
+});
+var dataVector = [];
+var readingsCount = 0;
+
+// console.log(knn.predict({
+//     x: data[365],
+//     k: 1
+// }));
+// console.log(getArrPosition('0013a20040a03e02'));
+// console.log(getArrPosition('0013a20040c848a4'));
+// console.log(getArrPosition('0013a20040c4556b'));
+// console.log(getArrPosition('0013a2004079b2e6'));
+
 
 var xbeeOptions = {
         api_mode: 2
@@ -66,21 +93,19 @@ var Serial = new serialPort.SerialPort(portName, serialOptions, openImmediately,
             console.log('ERROR: Xbee API Checksum mismatch');
         });
 
-        Serial.write(buildApiFrame('000000000000ffff', 'fffe', DISCOVER));
+        Serial.write(buildApiFrame('000000000000ffff', DISCOVER));
         xbeeAPI.on('frame_object', handleIdResponses);
 
         setTimeout(function() {
             console.log(deviceList);
             Serial.flush();
             xbeeAPI.removeListener('frame_object', handleIdResponses);
+            xbeeAPI.on('frame_object', handleDataResponses);
             setInterval(function() {
                 deviceList.map(function(item) {
-                    Serial.write(buildApiFrame(item.remote64, item.remote16, PING));
+                    Serial.write(buildApiFrame(item.remote64, PING));
                 });
             }, 1000);
-            xbeeAPI.on('frame_object', function(frame) {
-                if (frame.type === C.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET) console.log(frame.remote16 + ':-' + frame.data.readUInt8(0) + 'dB');
-            });
         }, 1000);
     })
 });
@@ -97,10 +122,31 @@ function handleIdResponses(frame) {
     }
 }
 
-function buildApiFrame(addr64, addr16, cmd) {
+function handleDataResponses(frame) {
+    if (frame.type === C.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET) {
+        // console.log(getArrPosition(frame.remote64) + '\t' + frame.data.readUInt8(0));
+        dataVector[getArrPosition(frame.remote64)] = frame.data.readUInt8(0);
+        readingsCount++;
+        if (readingsCount >= 4) {
+            readingsCount = 0;
+            console.log(dataVector + '\t' + knn.predict({
+                x: dataVector,
+                k: 1
+            }));
+        }
+    }
+}
+function getArrPosition(addr64) {
+    if (addr64.match(/40c4556b/)) return 0;
+    else if (addr64.match(/4079b2e6/)) return 1;
+    else if (addr64.match(/40a03e02/)) return 2;
+    else if (addr64.match(/40c848a4/)) return 3;
+    else console.log('ERROR: Device address not found');
+}
+
+function buildApiFrame(addr64, cmd) {
     return xbeeAPI.buildFrame({
         type: C.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST,
-        destination16: addr16,
         destination64: addr64,
         id: 0x00,
         data: [cmd]

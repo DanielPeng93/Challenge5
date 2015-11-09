@@ -18,6 +18,7 @@
   "homepage": "https://github.com/EC544-2015-Group2/Challenge5#readme",
   "dependencies": {
     "keypress": "^0.2.1",
+    "machine_learning": "0.0.8",
     "serialport": "*",
     "xbee-api": "*"
   }
