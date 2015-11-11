@@ -60,7 +60,8 @@ var OK = 0xB0,
 var readingsList = [];
 
 var squareNum = -1,
-    readingCount = 0;
+    readingCount = 0,
+    reqdingsPerSquare = 2;
 
 
 // Create a serial port at the port name with the given serial options, open it immediately and call the callback function supplied
@@ -81,24 +82,35 @@ var Serial = new serialPort.SerialPort(portName, serialOptions, openImmediately,
             xbeeAPI.on('frame_object', handleDataResponses);
 
             process.stdin.on('keypress', function(ch, key) {
-                squareNum++;
-                readingCount = 0;
-                readingsList.map(function(item) {
-                    item.data[squareNum] = [];
-                });
-                var dataSamplingInterval = setInterval(function() {
+                if (key && key.ctrl && key.name == 'c') {
+                    fs.write(fs.openSync('data.txt', 'w'), JSON.stringify(readingsList).concat('\r\n'));
+                    var file = fs.openSync('data.csv', 'w');
+                    for (var i = 0; i < squareNum; i++)
+                        for (var j = 0; j < readingsPerSquare; j++) {
+                            console.log(i + '\t' + j);
+                            fs.write(file, data.map(function(item) {
+                                return item.data[i][j];
+                            }).join(',').concat('\r\n'));
+                        }
+
+                    process.exit(0);
+                } else {
+                    squareNum++;
+                    readingCount = 0;
                     readingsList.map(function(item) {
-                        Serial.write(buildApiFrame(item.remote64, PING));
+                        item.data[squareNum] = [];
                     });
-                    readingCount++;
-                    if (readingCount > 4) {
-                        setTimeout(function() {
+                    var dataSamplingInterval = setInterval(function() {
+                        readingsList.map(function(item) {
+                            Serial.write(buildApiFrame(item.remote64, PING));
+                        });
+                        readingCount++;
+                        if (readingCount >= readingsPerSquare) {
                             clearInterval(dataSamplingInterval);
                             console.log('Press any key on next square');
-                            fs.write(fs.openSync('data.txt', 'w'), JSON.stringify(readingsList).concat('\r\n'));
-                        }, 1000);
-                    }
-                }, 1000);
+                        }
+                    }, 500);
+                }
             });
         }, 1000);
     });

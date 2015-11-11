@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>RSSI localizer map</title>
+    <script type="text/javascript" src="/paper-full.js"></script>
+</head>
+
+<body>
+    <canvas id="myCanvas" style="width: 800px; height: 600px;"></canvas>
+    <script type="text/javascript" src="/socket.io-1.2.0.js"></script>
+    <script>
+    var socket = io();
+    window.onload = function() {
+        paper.install(window);
+        paper.setup('myCanvas');
+
+        var wallPath = new Path({
+            segments: [
+                [20, 40],
+                [20, 400],
+                [40, 400],
+                [40, 420],
+                [300, 420],
+                [300, 400],
+                [320, 400],
+                [320, 40],
+                [300, 40],
+                [300, 20],
+                [40, 20],
+                [40, 40]
+            ],
+            strokeColor: 'black',
+            strokeWidth: 5,
+            closed: true
+        });
+        var beaconLocations = [
+            [20, 40],
+            [40, 400],
+            [320, 400],
+            [300, 40]
+        ]
+        var beaconPaths = beaconLocations.map(function(location) {
+            var beaconPath = new Path.Circle(location, 5);
+            beaconPath.fillColor = 'red';
+            return beaconPath;
+        });
+    }
+    </script>
+</body>
+
+</html>
