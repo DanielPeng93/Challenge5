@@ -4,47 +4,91 @@
 <head>
     <meta charset="UTF-8">
     <title>RSSI localizer map</title>
-    <script type="text/javascript" src="/paper-full.js"></script>
+    <script src="/paper-full-0.9.25.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/dygraph/1.1.1/dygraph-combined.js"></script>
+    <script src="/socket.io-1.2.0.min.js"></script>
 </head>
 
 <body>
+    <h1>Map</h1>
     <canvas id="myCanvas" style="width: 800px; height: 600px;"></canvas>
-    <script type="text/javascript" src="/socket.io-1.2.0.js"></script>
+    <h1>Graph</h1>
+    <div id="graph"></div>
     <script>
     var socket = io();
+    var data = [];
+    var graph = new Dygraph(document.getElementById('graph'), [], {
+        labels: ['time', '1', '2', '3', '4']
+    });
+    var count = 0;
+    // socket.on('raw_data', function(data){
+    //     console.log(data);
+    // });
+    socket.on('raw_data', function(rssiValues) {
+        rssiValues.unshift(count);
+        count++;
+        data.push(rssiValues);
+        if (data.length > 40) data = data.slice(1);
+        graph.updateOptions({
+            'file': data
+        });
+    });
+
     window.onload = function() {
         paper.install(window);
         paper.setup('myCanvas');
 
         var wallPath = new Path({
             segments: [
-                [20, 40],
+                [40, 40],
+                [40, 100],
+                [20, 100],
+                [20, 160],
+                [40, 160],
+                [40, 220],
+                [20, 220],
+                [20, 280],
+                [40, 280],
+                [40, 340],
+                [20, 340],
                 [20, 400],
                 [40, 400],
                 [40, 420],
-                [300, 420],
-                [300, 400],
-                [320, 400],
-                [320, 40],
-                [300, 40],
+                [260, 420],
+                [260, 380],
+                [300, 380],
+                [300, 340],
+                [340, 340],
+                [340, 60],
+                [300, 60],
                 [300, 20],
-                [40, 20],
-                [40, 40]
+                [60, 20],
+                [60, 40]
             ],
             strokeColor: 'black',
             strokeWidth: 5,
             closed: true
         });
         var beaconLocations = [
-            [20, 40],
+            [40, 100],
             [40, 400],
-            [320, 400],
-            [300, 40]
+            [260, 380],
+            [300, 60]
         ]
         var beaconPaths = beaconLocations.map(function(location) {
-            var beaconPath = new Path.Circle(location, 5);
+            var beaconPath = new Path.Circle(location, 10);
             beaconPath.fillColor = 'red';
             return beaconPath;
+        });
+        var secondLayer = new paper.Layer();
+        socket.on('location', function(location) {
+            secondLayer.removeChildren();
+            secondLayer.addChild(Path.Circle({
+                center: location,
+                radius: 10,
+                fillColor: 'red'
+            }));
+            paper.view.draw();
         });
     }
     </script>

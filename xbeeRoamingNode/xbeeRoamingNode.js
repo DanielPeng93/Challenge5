@@ -43,9 +43,9 @@ app.use(express.static(__dirname + '/client'));
 
 var data = fs.readFileSync('data.csv', 'utf8').split('\r\n').map(function(item) {
     return item.split(',');
-}).slice(0,-1);
+}).slice(0, -1);
 var result = [];
-for (var i = 0; i < 6; i++)
+for (var i = 0; i < 8; i++)
     for (var j = 0; j < 3; j++)
         result.push(i);
 
@@ -59,16 +59,6 @@ var knn = new ml.KNN({
 var dataVector = [];
 var readingsCount = 0;
 
-// for(var i=0; i<33; i++)
-//     console.log(knn.predict({
-//     x: data[i],
-//     k: 1
-// }));
-// console.log(getArrPosition('0013a20040a03e02'));
-// console.log(getArrPosition('0013a20040c848a4'));
-// console.log(getArrPosition('0013a20040c4556b'));
-// console.log(getArrPosition('0013a2004079b2e6'));
-
 
 var xbeeOptions = {
         api_mode: 2
@@ -76,9 +66,10 @@ var xbeeOptions = {
     C = xbee_api.constants,
     xbeeAPI = new xbee_api.XBeeAPI(xbeeOptions);
 
-// Serial port options
-// This program requires you to manually give it the port name in the command line arguments
-// Giving the xbeeAPI.rawParser() to the serial port ensures that the xbeeAPI object handles the serial input/output buffer
+if (process.argv.length < 3) {
+    console.log('ERROR: Please specify serial port name');
+    process.exit(1);
+}
 var portName = process.argv[2],
     openImmediately = true,
     serialOptions = {
@@ -143,12 +134,39 @@ function handleDataResponses(frame) {
         readingsCount++;
         if (readingsCount >= 4) {
             readingsCount = 0;
-            // console.log(dataVector);
-            console.log(dataVector + '\t' + knn.predict({
+            io.emit('raw_data', dataVector);
+            io.emit('location', sendLocation(knn.predict({
+                x: dataVector,
+                k: 1
+            })));
+            console.log(knn.predict({
                 x: dataVector,
                 k: 1
             }));
         }
+    }
+}
+
+function sendLocation(squareId) {
+    switch (squareId) {
+        case 0:
+            return [100, 360];
+        case 1:
+            return [100, 270];
+        case 2:
+            return [100, 180];
+        case 3:
+            return [100, 90];
+        case 4:
+            return [240, 90];
+        case 5:
+            return [240, 180];
+        case 6:
+            return [240, 270];
+        case 7:
+            return [240, 360];
+        default:
+            return [180, 230];
     }
 }
 
