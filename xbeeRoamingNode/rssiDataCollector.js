@@ -30,6 +30,7 @@ var xbee_api = require('xbee-api'),
     fs = require('fs');
 
 require('keypress')(process.stdin);
+var stats = require('stats-lite');
 // IMPORTANT: Use api_mode: 2 as the xbee-arduino library requires it
 // Create the xbeeAPI object which handles parsing and generating of API frames
 // C contains some Xbee constant bytes such as frame type, transmit/receive options, etc.
@@ -61,7 +62,7 @@ var readingsList = [];
 
 var squareNum = -1,
     readingCount = 0,
-    readingsPerSquare = 3;
+    readingsPerSquare = 5;
 
 
 // Create a serial port at the port name with the given serial options, open it immediately and call the callback function supplied
@@ -87,11 +88,9 @@ var Serial = new serialPort.SerialPort(portName, serialOptions, openImmediately,
                     fs.write(fs.openSync('data.txt', 'w'), JSON.stringify(readingsList).concat('\r\n'));
                     var file = fs.openSync('data.csv', 'w');
                     for (var i = 0; i <= squareNum; i++)
-                        for (var j = 0; j < readingsPerSquare; j++) {
-                            fs.write(file, readingsList.map(function(item) {
-                                return item.data[i][j];
-                            }).join(',').concat('\r\n'));
-                        }
+                        fs.write(file, readingsList.map(function(item) {
+                            return [stats.mean(item.data[i]), stats.stdev(item.data[i])];
+                        }).join(',').concat('\r\n'));
 
                     process.exit(0);
                 } else {

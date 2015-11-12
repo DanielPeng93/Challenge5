@@ -28,7 +28,8 @@
 var xbee_api = require('xbee-api'),
     serialPort = require('serialport'),
     ml = require('machine_learning'),
-    fs = require('fs');
+    fs = require('fs'),
+    stats = require('stats-lite');
 
 var express = require('express'),
     app = express(),
@@ -43,10 +44,10 @@ app.use(express.static(__dirname + '/client'));
 
 var data = fs.readFileSync('data.csv', 'utf8').split('\r\n').map(function(item) {
     return item.split(',');
-}).slice(0,-1);
+}).slice(0, -1);
 var result = [];
 for (var i = 0; i < 6; i++)
-    for (var j = 0; j < 3; j++)
+    // for (var j = 0; j < 3; j++)
         result.push(i);
 
 // console.log(data);
@@ -56,7 +57,12 @@ var knn = new ml.KNN({
     data: data,
     result: result
 });
-var dataVector = [];
+dataVector = [
+    [],
+    [],
+    [],
+    []
+];
 var readingsCount = 0;
 
 // for(var i=0; i<33; i++)
@@ -139,15 +145,30 @@ function handleIdResponses(frame) {
 function handleDataResponses(frame) {
     if (frame.type === C.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET) {
         // console.log(getArrPosition(frame.remote64) + '\t' + frame.data.readUInt8(0));
-        dataVector[getArrPosition(frame.remote64)] = frame.data.readUInt8(0);
+        dataVector[getArrPosition(frame.remote64)].push(frame.data.readUInt8(0));
         readingsCount++;
-        if (readingsCount >= 4) {
+        if (readingsCount >= 20) {
             readingsCount = 0;
+            // console.log(dataVector.map(function(item) {
+            //     return [stats.mean(item), stats.stdev(item)];
+            // }).reduce(function(prevArr, current) {
+            //     return prevArr.concat(current);
+            // }, []));
             // console.log(dataVector);
-            console.log(dataVector + '\t' + knn.predict({
-                x: dataVector,
-                k: 1
+            console.log(knn.predict({
+                x: dataVector.map(function(item) {
+                    return [stats.mean(item), stats.stdev(item)];
+                }).reduce(function(prevArr, current) {
+                    return prevArr.concat(current);
+                }, []),
+                k: 3
             }));
+            dataVector = [
+                [],
+                [],
+                [],
+                []
+            ];
         }
     }
 }
