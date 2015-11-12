@@ -61,7 +61,7 @@ var readingsList = [];
 
 var squareNum = -1,
     readingCount = 0,
-    reqdingsPerSquare = 2;
+    readingsPerSquare = 3;
 
 
 // Create a serial port at the port name with the given serial options, open it immediately and call the callback function supplied
@@ -82,13 +82,13 @@ var Serial = new serialPort.SerialPort(portName, serialOptions, openImmediately,
             xbeeAPI.on('frame_object', handleDataResponses);
 
             process.stdin.on('keypress', function(ch, key) {
-                if (key && key.ctrl && key.name == 'c') {
+                if (key && key.name == 'c') {
+                    console.log('Exiting')
                     fs.write(fs.openSync('data.txt', 'w'), JSON.stringify(readingsList).concat('\r\n'));
                     var file = fs.openSync('data.csv', 'w');
-                    for (var i = 0; i < squareNum; i++)
+                    for (var i = 0; i <= squareNum; i++)
                         for (var j = 0; j < readingsPerSquare; j++) {
-                            console.log(i + '\t' + j);
-                            fs.write(file, data.map(function(item) {
+                            fs.write(file, readingsList.map(function(item) {
                                 return item.data[i][j];
                             }).join(',').concat('\r\n'));
                         }
@@ -118,14 +118,22 @@ var Serial = new serialPort.SerialPort(portName, serialOptions, openImmediately,
 
 function handleIdResponses(frame) {
     if (frame.type === C.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET)
-        readingsList.push({
+        readingsList[getArrPosition(frame.remote64)] = {
             remote64: frame.remote64,
             remote16: frame.remote16,
             location: frame.data.toString().split(',').map(function(item) {
                 return parseFloat(item);
             }),
             data: []
-        });
+        };
+}
+
+function getArrPosition(addr64) {
+    if (addr64.match(/40c4556b/)) return 0;
+    else if (addr64.match(/4079b2e6/)) return 1;
+    else if (addr64.match(/40c848a4/)) return 2;
+    else if (addr64.match(/40c8490b/)) return 3;
+    else console.log("ERROR: Device address unknown");
 }
 
 function handleDataResponses(frame) {
